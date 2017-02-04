@@ -1,0 +1,9 @@
+/**{*/
+    /*color: azure;*/
+/*}*/
+body{
+background: linear-gradient(to bottom, rgb(37, 83, 105) 0%, rgb(23, 42, 56) 100%)
+}
+#c{
+ border: 5px solid red;
+}
