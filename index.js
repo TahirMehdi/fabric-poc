@@ -223,6 +223,7 @@ function createSectors(config) {
     let s1, s2, s3, s4;
     let currN = 0;
     let p;
+    let l = [];
 // = [16.1, 24.9, 0.8, 8, 44.1, 2.2, 3.9,
     // 24.6, 14.8, 12.2, 16.5, 25.4, 3.1, 3.4,
     // 65.6, 18.2, 0, 16.2, 0, 0, 100, 0];
@@ -273,32 +274,30 @@ function createSectors(config) {
             fillBar(circle, p);
 
             if (z === 0) {
-                const centerPoint = new fabric.Point(0, 0);
+                const centerPoint = new fabric.Point(wWidth/2, wHeight/2);
                 let rad = circlesConfig.find((el) => {
                         return el.name === 'nameCircle';
                     }).radius * addCircle.params.radiusMultpl;
-                let circlePoint = () => new fabric.Point(centerPoint.x, centerPoint.y + rad);
-                let r = Math.PI + (currN)*(2*Math.PI  / 22) //(Math.PI * 2 / 100) * currN;
+                let circlePoint = () => new fabric.Point(centerPoint.x + rad, centerPoint.y);
+                let r = (currN)*(2*Math.PI  / 22)- (2*Math.PI  / 22)/2;
                 let rotatedPoint = fabric.util.rotatePoint(circlePoint(), centerPoint, r);
-                let line = new fabric.Line([0,0,rotatedPoint.x,rotatedPoint.y], {
-                    stroke: '#fff',
-                    strokeWidth: 5.5,
+                let line = new fabric.Line([centerPoint.x, centerPoint.y,rotatedPoint.x,rotatedPoint.y], {
+                    stroke: '#215866',
+                    strokeWidth: 5,
                     fill:'#fff',
                     opacity: 1,
-                    selectable: selectable,
-                    originY: 'center',
+                    // selectable: selectable,
                     originX: 'center',
-                    left: wWidth / 2,
-                    top: wHeight / 2
+                    originY: 'center',
                 });
-                console.log(line);
+                console.log(line, centerPoint);
                 canvas.add(line);
-
-
+                line.moveTo(1);
             }
             currN++;
         }
     }
+
     let t = new fabric.Group(circles, {left: wWidth / 2, top: wHeight / 2, selectable: selectable});
     canvas.add(t);
     t.moveTo(1);
@@ -316,38 +315,6 @@ function widget(config) {
 widget(config);
 console.log(canvas.getObjects());
 canvas.renderAll();
-
-// let circle = drawElement({
-//     radius: 500,
-//     startAngle: 0,
-//     angle: 270 + 360 / 22 * 2 + 0.5,
-//     endAngle: 2 * Math.PI / 22,
-//     fill:'#fff',
-//     // startAngle: 3/2*Math.PI + 2*Math.PI/22,
-//     // angle:0,
-//     // endAngle: 3/2*Math.PI + 2*Math.PI/22+ 2*Math.PI/22,
-//     stroke: '#57c66c',
-//     startRadius: 500,
-//     endRadius: 800,
-// });
-// fillBar(circle, 100);
-// canvas.add(circle);
-// fillBar(circle, 50);
-//  console.log(circle);
-//circle.moveTo(4);  //zindex between datasetCircle and barCircle
-// config.datasets
-//     .reduce((total, el) => {
-//         return total + el['metrics'].length;
-//     })
-//     .map()
-//console.log(canvas.getObjects());
-//canvas.deactivateAll();
-// canvas.setWidth(wWidth);
-// canvas.setHeight(wHeight);
-// canvas.renderOnAddRemove = false;
-// canvas.skipTargetFind = false;
-// canvas.stateful = false;
-// canvas.selectable = false;
 
 // let config1: function (e) {
 // e.setConfig({
