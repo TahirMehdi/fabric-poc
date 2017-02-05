@@ -14,9 +14,10 @@ const canvas = new fabric.Canvas('widgetRadar', {
     width: wWidth,
     height: wHeight
 });
-fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
-const selectable = true; //object selection
+const selectable = false; //object selection
 const circleRad = ( wWidth < wHeight ? wWidth : wHeight) * 0.95 / 2; // radius multiplier, depends on canvas size
+fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
+
 const circlesList = {};
 const config = {
     title: "Radar widget",
@@ -32,13 +33,14 @@ const config = {
         }, {name: "Services", value: 20}, {name: "Whols. & Retail", value: 36}]
     }, {
         name: "Region",
-        metrics: [{name: "CENTRAL TEAMS", value: 225}, {
+        metrics: [{name: "CENTRAL\n TEAMS", value: 225}, {
             name: "LONDON & SE",
             value: 135
-        }, {name: "MIDLANDS & WALES", value: 111}, {name: "NORTH", value: 151}, {
+        }, {name: "MIDLANDS\n & WALES", value: 111}, {name: "NORTH", value: 151}, {
+
             name: "OTHER",
             value: 232
-        }, {name: "SCOTLAND, NI & NE ENGLAND", value: 28}, {name: "THAMES VALLEY & SW", value: 31}]
+        }, {name: "SCOTLAND, NI \n& NE ENGLAND", value: 28}, {name: "   THAMES\nVALLEY & SW", value: 31}]
     }, {
         name: "Rating",
         metrics: [{name: "1 to 3", value: 600}, {name: "4 to 6", value: 166}, {
@@ -104,8 +106,8 @@ function createLines(count) {
 }
 createLines.params = {
     stroke: '#fff',
-    strokeWidth: 0.5,
-    opacity: 0.5,
+    strokeWidth: 0.1,
+    opacity: 1,
     selectable: selectable,
     originY: 'center',
     originX: 'center',
@@ -159,18 +161,8 @@ function createWheel(count, circlesConfig) {
 function fillBar(id, prc) {
     prc = prc || 0;
     id.setStrokeWidth((id.radius) * 5 * circleRad / 1000 * prc / 100);
-    // id.setStrokeWidth((id.endRadius - id.startRadius) * 2 * prc / 100);
 }
-function createSegmentText(params, value) {
-    const centerPoint = new fabric.Point(wWidth / 2, wHeight / 2);
-    let circlePoint = () => new fabric.Point(centerPoint.x, centerPoint.y + params.radius);
-    let rotatedPoint = fabric.util.rotatePoint(circlePoint(), centerPoint, params.startAngle);
 
-    params.angle = params.startAngle * 180 / Math.PI + 180;
-    params.left = rotatedPoint.x;
-    params.top = rotatedPoint.y;
-    return new fabric.Text(value, params);
-}
 function countLines(config) {
     let counter = 0;
     for (let i = 0; i < config.datasets.length; i++) {
@@ -189,6 +181,16 @@ function createBarSector(circle, sectorsCount, currSector, params) {
     return new fabric.Circle(params);
 
 }
+function createSegmentText(value, params) {
+    const centerPoint = new fabric.Point(wWidth / 2, wHeight / 2);
+    let circlePoint = () => new fabric.Point(centerPoint.x, centerPoint.y + params.radius);
+    let rotatedPoint = fabric.util.rotatePoint(circlePoint(), centerPoint, params.startAngle);
+
+    params.angle = params.startAngle * 180 / Math.PI + 180;
+    params.left = rotatedPoint.x;
+    params.top = rotatedPoint.y;
+    return new fabric.Text(value, params);
+}
 function createTextSector(startCircle, endCircle, sectorsCount, currSector, fillValue) {
     let startRadius = startCircle.getRadiusX();
     let endRadius = endCircle.getRadiusX();
@@ -199,19 +201,9 @@ function createTextSector(startCircle, endCircle, sectorsCount, currSector, fill
     createTextSector.params.radius = startRadius + (endRadius - startRadius) / 2;
     createTextSector.params.startRadius = startRadius;
     createTextSector.params.endRadius = endRadius;
-    return createSegmentText(createTextSector.params, fillValue);
+    return createSegmentText(fillValue, createTextSector.params);
 }
 createTextSector.params = {
-    name: '',
-    value: 0,
-    radius: 0,
-    angle: 0,
-    startAngle: 0,
-    endAngle: 0,
-    stroke: '#fff',
-    strokeWidth: 0,
-    startRadius: 0,
-    endRadius: 0,
     selectable: selectable
 };
 
@@ -223,10 +215,12 @@ function createSectors(config) {
     let s1, s2, s3, s4;
     let currN = 0;
     let p;
-    let l = [];
-// = [16.1, 24.9, 0.8, 8, 44.1, 2.2, 3.9,
-    // 24.6, 14.8, 12.2, 16.5, 25.4, 3.1, 3.4,
-    // 65.6, 18.2, 0, 16.2, 0, 0, 100, 0];
+    let maxVal = config.datasets.reduce((val, el) => {
+        let t = el.metrics.reduce((vl, l) => {
+            return vl > l.value ? vl : l.value;
+        },0);
+        return val > t ? val : t;
+    });
     createTextSector.params.fontFamily = 'sans-serif';
     createTextSector.params.fontWeight = 'normal';
     createTextSector.params.fill = '#fff';
@@ -234,12 +228,6 @@ function createSectors(config) {
     createTextSector.params.opacity = 1;
     for (let i = 0; i < config.datasets.length; i++) {
         for (let z = 0; z < config.datasets[i].metrics.length; z++) {
-            // sectors.push({
-            //     datasetName: config.datasets[i].name,
-            //     name: config.datasets[i].metrics[z].name,
-            //     value: config.datasets[i].metrics[z].value,
-            //     percent: p[currN]
-            // });
             createTextSector.params.fontSize = 22 * circleRad / 1000;
             createTextSector.params.fill = '#75929E';
             createTextSector.params.opacity = 1;
@@ -249,17 +237,17 @@ function createSectors(config) {
             createTextSector.params.fill = '#F5F7F8';
             createTextSector.params.fontSize = 73 * circleRad / 1000;
             s3 = createTextSector(c.dataCircle, c.valueCircle, n, currN, config.datasets[i].metrics[z].value.toString());
-            p = Math.floor(config.datasets[i].metrics[z].value / 913 * 1000) / 10;
+            p = Math.floor(config.datasets[i].metrics[z].value / maxVal * 1000) / 10;
 
             createTextSector.params.fontSize = 35 * circleRad / 1000;
             createTextSector.params.fill = '#5F8998';
-            createTextSector.params.opacity = 1;//0.5;
+            createTextSector.params.opacity = 1;
             s2 = createTextSector(c.barCircle, c.dataCircle, n, currN, p.toString() + '%');
             sectors.push(s1);
             sectors.push(s2);
             sectors.push(s3);
             if (z === Math.floor(config.datasets[i].metrics.length / 2)) {
-                createTextSector.params.fontSize = 25 * circleRad / 1000;
+                createTextSector.params.fontSize = 35 * circleRad / 1000;
                 createTextSector.params.fill = '#fff';
                 createTextSector.params.opacity = 1;
                 s4 = createTextSector(c.centerCircle, c.datasetCircle, n, currN, config.datasets[i].name);
@@ -274,23 +262,18 @@ function createSectors(config) {
             fillBar(circle, p);
 
             if (z === 0) {
-                const centerPoint = new fabric.Point(wWidth/2, wHeight/2);
+                const centerPoint = new fabric.Point(wWidth / 2, wHeight / 2);
                 let rad = circlesConfig.find((el) => {
                         return el.name === 'nameCircle';
                     }).radius * addCircle.params.radiusMultpl;
                 let circlePoint = () => new fabric.Point(centerPoint.x + rad, centerPoint.y);
-                let r = (currN)*(2*Math.PI  / 22)- (2*Math.PI  / 22)/2;
+                let r = (currN) * (2 * Math.PI / n) - (2 * Math.PI / n) / 2;
                 let rotatedPoint = fabric.util.rotatePoint(circlePoint(), centerPoint, r);
-                let line = new fabric.Line([centerPoint.x, centerPoint.y,rotatedPoint.x,rotatedPoint.y], {
+                let line = new fabric.Line([centerPoint.x, centerPoint.y, rotatedPoint.x, rotatedPoint.y], {
                     stroke: '#215866',
                     strokeWidth: 5,
-                    fill:'#fff',
-                    opacity: 1,
-                    // selectable: selectable,
-                    originX: 'center',
-                    originY: 'center',
+                    selectable: selectable
                 });
-                console.log(line, centerPoint);
                 canvas.add(line);
                 line.moveTo(1);
             }
@@ -315,27 +298,3 @@ function widget(config) {
 widget(config);
 console.log(canvas.getObjects());
 canvas.renderAll();
-
-// let config1: function (e) {
-// e.setConfig({
-// animation: {active: !0},
-// font: {family: "sans-serif", size: "0.7em", weight: "normal"},
-// title: {color: "#f00"},
-// datasetGrid: {color: "#215866", lineWidth: 5},
-// dataGrid: {color: "#387486", lineWidth: .9},
-// centerCircle: {color: "#fff", backgroundColor: "#0F262D"},
-// datasetCircle: {color: "#A2AFB3", backgroundColor: "#1F4D59"},
-// barCircle: {backgroundColor: "#57c66c"},
-// dataCircle: {
-// color: "#5F8998",
-// backgroundColor: "#2c6e80",
-// gradient: {startColor: "#2A6C7F", endColor: "#2A6C7F"}
-// },
-// valueCircle: {color: "#F5F7F8", backgroundColor: "#2A6A7D"},
-// nameCircle: {
-// color: "#75929E",
-// backgroundColor: "#16596E",
-// selected: {color: "#80959D", backgroundColor: "#0E4A5B"}
-// }
-// })
-// }
