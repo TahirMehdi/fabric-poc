@@ -10,11 +10,12 @@ const canvas = new fabric.Canvas('widgetRadar', {
     stateful: false,
     selectable: false,
     renderOnAddRemove: false,
-    skipTargetFind: true,
+    skipTargetFind: false,
     width: wWidth,
     height: wHeight
 });
-fabric.Object.prototype.selectable = false; //all object selection
+fabric.Object.prototype.evented = true; //all object selection
+fabric.Object.prototype.selectable = true; //all object selection
 fabric.Object.prototype.hasControls = false; //all object selection
 fabric.Object.prototype.hasBorders = false; //all object selection
 fabric.Object.prototype.hasRotatingPoint = false; //all object selection
@@ -117,7 +118,8 @@ createLines.params = {
     top: wHeight/2
 };
 function addCircle(params) {
-    params = Object.assign({}, addCircle.params, params) || Object.assign({}, addCircle.params);
+    let x;
+    params = Object.assign({}, addCircle.params, params)//, x) //|| Object.assign({}, addCircle.params);
     params.radius = params.radius * params.radiusMultpl;
     return new fabric.Circle(params);
 }
@@ -292,19 +294,44 @@ function widget(config) {
         }//{left: wWidth / 2, top: wHeight / 2, selectable: selectable}
         );
     canvas.add(data);
-   data.set('angle',100);
+//   data.set('angle',100);
     data.animate('angle', 360, {
         duration: 7000,
         onChange: canvas.renderAll.bind(canvas)
     });
+    // data.animate('left', 300, {
+    //     duration: 2000,
+    //     onChange: canvas.renderAll.bind(canvas)
+    // });
   //  sectors[0].set('top',200)
+    let group = data;
+    group.on('mouse:down', function(e){
+        var innerTarget  = group._searchPossibleTargets(e.e);
+        console.log(innerTarget);
+    });
+
+    group._searchPossibleTargets = function(e) {
+        var pointer = this.canvas.getPointer(e, true);
+        var i = objects.length,
+            normalizedPointer = this.canvas._normalizePointer(this, pointer);
+
+        while (i--) {
+            if (this.canvas._checkTarget(normalizedPointer, this._objects[i])) {
+                return this._objects[i];
+            }
+        }
+        return null;
+    }
+
 }
 widget(config);
 console.log(canvas.getObjects());
 canvas.renderAll();
-canvas.on('mouse:down',(e)=>{
-    console.log(e.target);
-});
-canvas.on('mouse:down',(e)=>{
-    console.log('m2');
-});
+// canvas.on('mouse:down',(e)=>{
+//     console.log(e);
+// });
+//
+//
+// canvas.on('mouse:down',(e)=>{
+//     console.log('m2');
+// });
