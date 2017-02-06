@@ -8,15 +8,18 @@ const wWidth = window.innerWidth * scale;
 const wHeight = window.innerHeight * scale;
 const canvas = new fabric.Canvas('widgetRadar', {
     stateful: false,
-    selectable: true,
+    selectable: false,
     renderOnAddRemove: false,
-    skipTargetFind: false,
+    skipTargetFind: true,
     width: wWidth,
     height: wHeight
 });
 fabric.Object.prototype.selectable = false; //all object selection
-const circleRad = ( wWidth < wHeight ? wWidth : wHeight) * 0.95 / 2; // radius multiplier, depends on canvas size
+fabric.Object.prototype.hasControls = false; //all object selection
+fabric.Object.prototype.hasBorders = false; //all object selection
+fabric.Object.prototype.hasRotatingPoint = false; //all object selection
 fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
+const circleRad = ( wWidth < wHeight ? wWidth : wHeight) * 0.95 / 2; // radius multiplier, depends on canvas size
 
 const circlesList = {};
 const config = {
@@ -284,11 +287,24 @@ function widget(config) {
     let sectors = createSectors(config);
     let data = new fabric.Group(
             [...wheel.botWheel,...sectors.sectors,...wheel.topWheel, ...sectors.textOnCenter]
-            //{left: wWidth / 2, top: wHeight / 2, selectable: selectable}
+            , {
+            evented:true
+        }//{left: wWidth / 2, top: wHeight / 2, selectable: selectable}
         );
     canvas.add(data);
-    sectors.sectors[0].set('visible',false)
+   data.set('angle',100);
+    data.animate('angle', 360, {
+        duration: 7000,
+        onChange: canvas.renderAll.bind(canvas)
+    });
+  //  sectors[0].set('top',200)
 }
 widget(config);
 console.log(canvas.getObjects());
 canvas.renderAll();
+canvas.on('mouse:down',(e)=>{
+    console.log(e.target);
+});
+canvas.on('mouse:down',(e)=>{
+    console.log('m2');
+});
