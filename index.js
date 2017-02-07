@@ -15,7 +15,7 @@ const canvas = new fabric.Canvas('widgetRadar', {
     height: wHeight
 });
 fabric.Object.prototype.evented = true; //all object selection
-fabric.Object.prototype.selectable = true; //all object selection
+fabric.Object.prototype.selectable = false; //all object selection
 fabric.Object.prototype.hasControls = false; //all object selection
 fabric.Object.prototype.hasBorders = false; //all object selection
 fabric.Object.prototype.hasRotatingPoint = false; //all object selection
@@ -114,8 +114,8 @@ createLines.params = {
     opacity: 1,
     originY: 'center',
     originX: 'center',
-    left: wWidth/2,
-    top: wHeight/2
+    left: wWidth / 2,
+    top: wHeight / 2
 };
 function addCircle(params) {
     let x;
@@ -128,8 +128,8 @@ addCircle.params = {
     fill: '#f00',
     stroke: '#ff0',
     strokeWidth: 0,
-    left: wWidth/2,
-    top: wHeight/2,
+    left: wWidth / 2,
+    top: wHeight / 2,
     originY: 'center',
     originX: 'center',
     radiusMultpl: circleRad,
@@ -215,7 +215,7 @@ function createSectors(config) {
     let maxVal = config.datasets.reduce((val, el) => {
         let t = el.metrics.reduce((vl, l) => {
             return vl > l.value ? vl : l.value;
-        },0);
+        }, 0);
         return val > t ? val : t;
     });
     createTextSector.params.fontFamily = 'sans-serif';
@@ -278,9 +278,14 @@ function createSectors(config) {
     }
 
     return {
-        sectors:sectors,
-        textOnCenter:textOnCenter
+        sectors: sectors,
+        textOnCenter: textOnCenter
     };
+}
+function rotate(object, angle) {
+    object.map((el) => {
+        el.angle += angle;
+    });
 }
 
 function widget(config) {
@@ -288,40 +293,59 @@ function widget(config) {
 
     let sectors = createSectors(config);
     let data = new fabric.Group(
-            [...wheel.botWheel,...sectors.sectors,...wheel.topWheel, ...sectors.textOnCenter]
-            , {
-            evented:true
-        }//{left: wWidth / 2, top: wHeight / 2, selectable: selectable}
-        );
-    canvas.add(data);
-//   data.set('angle',100);
-    data.animate('angle', 360, {
-        duration: 7000,
-        onChange: canvas.renderAll.bind(canvas)
-    });
-    // data.animate('left', 300, {
-    //     duration: 2000,
-    //     onChange: canvas.renderAll.bind(canvas)
-    // });
-  //  sectors[0].set('top',200)
-    let group = data;
-    group.on('mouse:down', function(e){
-        var innerTarget  = group._searchPossibleTargets(e.e);
-        console.log(innerTarget);
-    });
-
-    group._searchPossibleTargets = function(e) {
-        var pointer = this.canvas.getPointer(e, true);
-        var i = objects.length,
-            normalizedPointer = this.canvas._normalizePointer(this, pointer);
-
-        while (i--) {
-            if (this.canvas._checkTarget(normalizedPointer, this._objects[i])) {
-                return this._objects[i];
-            }
+        [...wheel.botWheel, ...sectors.sectors, ...wheel.topWheel, ...sectors.textOnCenter]
+        , {
+            evented: true
         }
-        return null;
-    }
+    );
+    canvas.add(data);
+    // let data = [...wheel.botWheel,...sectors.sectors,...wheel.topWheel, ...sectors.textOnCenter];
+    // data.map((el)=>{
+    //     canvas.add(el);
+    // });
+    // data.set('angle',100);
+    //   data.animate('angle', 360, {
+    //       duration: 7000,
+    //       onChange: canvas.renderAll.bind(canvas)
+    //   });
+    //   data.animate('left', 300, {
+    //       duration: 2000,
+    //       onChange: canvas.renderAll.bind(canvas)
+    //   });
+    let t = false;
+    canvas.on('mouse:down', function (e) {
+        if (!t) {
+            data.animate('angle', 360, {
+                duration: 7000,
+                onChange: canvas.renderAll.bind(canvas)
+            });
+        }else{
+            data.animate('angle', 0, {
+                duration: 0,
+                onChange: canvas.renderAll.bind(canvas)
+            });
+        }
+        t = !t;
+    });
+    // sectors[0].set('top',200)
+    //   let group = data;
+    //   group.on('mouse:down', function(e){
+    //       var innerTarget  = group._searchPossibleTargets(e.e);
+    //       console.log(innerTarget);
+    //   });
+    //
+    //   group._searchPossibleTargets = function(e) {
+    //       var pointer = this.canvas.getPointer(e, true);
+    //       var i = objects.length,
+    //           normalizedPointer = this.canvas._normalizePointer(this, pointer);
+    //
+    //       while (i--) {
+    //           if (this.canvas._checkTarget(normalizedPointer, this._objects[i])) {
+    //               return this._objects[i];
+    //           }
+    //       }
+    //       return null;
+    //   }
 
 }
 widget(config);
